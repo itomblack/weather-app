@@ -42,7 +42,17 @@ body {
 // STYLES
 //===============================================================================
 
-
+.btn {
+ background-color: $purple;
+ color: $paper;
+ font-weight: bold;
+ border: none;
+ outline: none;
+ padding: 8px 16px;
+ border-radius: 50px;
+ margin: 8px;
+ &:hover { background-color: $dblue;}
+}
 
 
 
