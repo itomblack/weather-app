@@ -52,13 +52,11 @@ $( document ).ready(function() {
 	}
 
 	function afterGotData(startHour) {
-		console.log(startHour);
 		//***** 0 = current hour ***** 1 per hours ***** 24 = next day current hour ***** 48 = 2 days time current hour ***//
 		var locationName = apiCallData.timezone;
 		var currentTempC = apiCallData.currently.temperature;
 		var timeStamp = timeConverter(apiCallData.hourly.data[startHour].time);
 
-		console.log(timeStamp[0]);
 		$('#time').html(timeStamp[0].timeHour + ':00');
 		$('#date').html(timeStamp[0].dateDay + ' ' + timeStamp[0].dateMonth);
 		$('#location').html(locationName);
@@ -111,7 +109,7 @@ $( document ).ready(function() {
 		}
 		else if (when == 'tomorrow') { 
 			urlToUse = urlTomorrow 
-			startHour = 8;
+			startHour = 7;
 		}
 
 		//call API
@@ -150,7 +148,6 @@ $( document ).ready(function() {
 	} // ____END APICALL____
 
 	function timeConverter(UNIX_timestamp){
-		console.log(UNIX_timestamp);
 	  var a = new Date(UNIX_timestamp * 1000);
 	  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 	  var year = a.getFullYear();
@@ -160,7 +157,6 @@ $( document ).ready(function() {
 	  var min = a.getMinutes();
 	  var sec = a.getSeconds();
 	  // var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec ;
-	  console.log(hour);
 	  var time = [{
 	  	'dateDay' : date,
 	  	'dateMonth' : month,

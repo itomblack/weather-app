@@ -109,7 +109,7 @@ $( document ).ready(function() {
 		}
 		else if (when == 'tomorrow') { 
 			urlToUse = urlTomorrow 
-			startHour = 8;
+			startHour = 7;
 		}
 
 		//call API
