@@ -208,3 +208,17 @@ html, body {
   font-family: sans-serif;
   line-height: 1.4;
   text-align: center; }
+
+/* line 45, /Users/itomblack/Repos/weather-app/src/sass/styles.scss */
+.btn {
+  background-color: #7700FF;
+  color: white;
+  font-weight: bold;
+  border: none;
+  outline: none;
+  padding: 8px 16px;
+  border-radius: 50px;
+  margin: 8px; }
+  /* line 54, /Users/itomblack/Repos/weather-app/src/sass/styles.scss */
+  .btn:hover {
+    background-color: #4d45ff; }
