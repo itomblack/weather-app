@@ -3,7 +3,7 @@ $( document ).ready(function() {
 	//set location
 	var latitude = 51.5074;
 	var longitude = 0.1278;
-	var tomorrow = '2016-01-08T00:00:00' 
+	var tomorrow = '2016-01-08T00:00:00' //NEED TO MAKE THIS WORK OUT THE DATE
 
 	//set times to collect and peak commute times
 	var timesOfDay = [{  
@@ -72,10 +72,11 @@ $( document ).ready(function() {
 		else if (currentTempC <= 30) { inRange(6); }
 		else if (currentTempC > 30) { inRange(7); }
 
-
 		// work out whether it's a wet or a dry day (from travel times)
+		isItWetToday()
 
-		// pick out 
+
+		// pick out an outfit
 	}
 
 
@@ -164,6 +165,71 @@ $( document ).ready(function() {
 	  }]
 	  return time;
 	}
+
+
+
+	// ************* A WET OR A DRY DAY? ************* **************** //
+	// ************* ********************************* **************** //
+	function isItWetToday() {
+		//find out the start time of the current forecast data
+		var peakHours = [7, 9, 17, 19];
+		var peakHoursLeft = [];
+		var peakAPILocations = [];
+		var currentHour = timeConverter(apiCallData.hourly.data[startHour].time)[0].timeHour;
+		var wetState;
+		// subtract current hours from each peakHourLeft. If less than 0 then remove it from the array
+		peakHours.forEach(function(item, index, object) {
+		    if ((item - currentHour) >= 0) {
+		    	//store as hours
+		    	peakHoursLeft.push(item)
+		    	//store as number in api call data array
+		    	peakAPILocations.push(item - currentHour)
+
+		    }
+		});
+		console.log(peakHoursLeft);
+		console.log(peakAPILocations);
+
+		//are there still peak hours?
+		( peakAPILocations.length > 0 ) ? (
+			//if it's too late to do the normal method, choose current weather status to rate wetness
+			wetState = currentWeather(apiCallData)
+			) : (
+			//else, pick out the forecast for peak travel times
+			console.log('false')
+			)
+
+		console.log('wetstate = ' + wetState);
+
+		
+		//rate wetness
+
+
+		//return wet damp or dry
+	}
+
+
+
+
+
+	// ************* GET WET STATE OF CURRENT WEATHER * **************** //
+	// ************* ********************************* **************** //
+	function currentWeather(apiCallData) {
+		console.log(apiCallData);
+		//use precipIntensity to work out wetness
+		if ( apiCallData.currently.precipIntensity <= 0.13 ) {
+			console.log('1')
+			return('dry');
+		} else if ( apiCallData.currently.precipIntensity <= 0.2 ) {
+			console.log('2')
+			return('drizzle');
+		} else if ( apiCallData.currently.precipIntensity > 0.2 ) {
+			return('wet');
+		}
+	} // ***** END CURRENTWEATHER **** //
+
+
+
 
 
 	// ************* CLICK TOMORROW CALLS TOMORROW DATA **************** //
