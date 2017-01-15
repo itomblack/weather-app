@@ -1,48 +1,57 @@
 $( document ).ready(function() {
 
+	
+	// var timesOfDay = [{  
+	//     'timeslot': '0',
+	//     'timeHour': '5',
+	//     'peak': false
+	// },{  
+	//     'timeslot': '1',
+	//     'timeHour': '7',
+	//     'peak': true
+	// },{  
+	//     'timeslot': '2',
+	//     'time': '9',
+	//     'peak': true
+	// },{  
+	//     'timeslot': '3',
+	//     'time': '11',
+	//     'peak': false
+	// },{  
+	//     'timeslot': '4',
+	//     'time': '13',
+	//     'peak': false
+	// },{  
+	//     'timeslot': '5',
+	//     'time': '15',
+	//     'peak': false
+	// },{  
+	//     'timeslot': '6',
+	//     'time': '17',
+	//     'peak': true
+	// },{  
+	//     'timeslot': '7',
+	//     'time': '19',
+	//     'peak': true
+	// },{  
+	//     'timeslot': '8',
+	//     'time': '21',
+	//     'peak': false
+	// }];
+
 	//set location
 	var latitude = 51.5074;
 	var longitude = 0.1278;
-	var tomorrow = '2016-01-08T00:00:00' 
+	var currentDate = new Date();
+	var tomorrowsDate  = new Date();
+	//set tomorrowdate to tomorrows date
+	tomorrowsDate.setDate(currentDate.getDate() + 1);
+
+	//Turn tomorrows date into format for api call
+	var tomorrow =  tomorrowsDate.getFullYear() + '-' + ("0" + (tomorrowsDate.getMonth() + 1)).slice(-2) + '-' + ("0" + tomorrowsDate.getDate()).slice(-2) + 'T00:00:00'
 
 	//set times to collect and peak commute times
-	var timesOfDay = [{  
-	    'timeslot': '0',
-	    'timeHour': '5',
-	    'peak': false
-	},{  
-	    'timeslot': '1',
-	    'timeHour': '7',
-	    'peak': true
-	},{  
-	    'timeslot': '2',
-	    'time': '9',
-	    'peak': true
-	},{  
-	    'timeslot': '3',
-	    'time': '11',
-	    'peak': false
-	},{  
-	    'timeslot': '4',
-	    'time': '13',
-	    'peak': false
-	},{  
-	    'timeslot': '5',
-	    'time': '15',
-	    'peak': false
-	},{  
-	    'timeslot': '6',
-	    'time': '17',
-	    'peak': true
-	},{  
-	    'timeslot': '7',
-	    'time': '19',
-	    'peak': true
-	},{  
-	    'timeslot': '8',
-	    'time': '21',
-	    'peak': false
-	}];
+	var peakHours = [7, 8, 9, 17, 18, 19];
 
 	var apiCallData;
 
@@ -72,10 +81,20 @@ $( document ).ready(function() {
 		else if (currentTempC <= 30) { inRange(6); }
 		else if (currentTempC > 30) { inRange(7); }
 
-
 		// work out whether it's a wet or a dry day (from travel times)
+		var wetLevel = isItWetToday()
 
-		// pick out 
+
+		if (wetLevel == 'dry') {
+			$('#rating').append(' but at least it\'s ' + wetLevel);
+		} else if (wetLevel == 'dizzle') {
+			$('#rating').append(' with some ' + wetLevel);
+		} else if (wetLevel == 'wet') {
+			$('#rating').append(' and sadly it\'s ' + wetLevel);
+		}
+		
+
+		// pick out an outfit
 	}
 
 
@@ -84,7 +103,7 @@ $( document ).ready(function() {
 	// ************* *************************************** **************** //
 	function inRange(rangeNum) {
 		if (rangeNum == 0) { $('#rating').text('Cold as ice!'); } 
-		else if (rangeNum == 1) { $('#rating').text('Damn cold'); } 
+		else if (rangeNum == 1) { $('#rating').text('Damn cold');	} 
 		else if (rangeNum == 2) { $('#rating').text('Pretty nippy'); } 
 		else if (rangeNum == 3) { $('#rating').text('Faily mild out'); } 
 		else if (rangeNum == 4) { $('#rating').text('Just about right'); } 
@@ -123,7 +142,7 @@ $( document ).ready(function() {
 		      afterGotData(startHour);
 		  },
 		  error: function() {
-		  	console.log('Oops, an error occured');
+		  	console.log('Agh, the API call messed up :(');
 		  }
 		  //move on after complete
 		});
@@ -164,6 +183,125 @@ $( document ).ready(function() {
 	  }]
 	  return time;
 	}
+
+
+
+	// ************* A WET OR A DRY DAY? ************* **************** //
+	// ************* ********************************* **************** //
+	function isItWetToday() {
+		//find out the start time of the current forecast data
+		var peakHoursLeft = [];
+		var peakAPILocations = [];
+		var currentHour = timeConverter(apiCallData.hourly.data[startHour].time)[0].timeHour;
+		var wetState;
+		var hourlyWetness = "";
+		// subtract current hours from each peakHourLeft. If less than 0 then remove it from the array
+		peakHours.forEach(function(item, index, object) {
+		    if ((item - currentHour) >= 0) {
+		    	//store as hours
+		    	peakHoursLeft.push(item)
+		    	//store as number in api call data array
+		    	peakAPILocations.push(item - currentHour)
+
+		    }
+		});
+		// console.log('peak hours times left: ' + peakHoursLeft);
+		// console.log('peak API locations: ' + peakAPILocations);
+
+		//are there still peak hours?
+		( peakAPILocations.length == 0 ) ? (
+				//if it's too late to do the normal method, choose current weather status to rate wetness
+				wetState = currentWeather(apiCallData)
+				) : (
+				//else, pick out the forecast for peak travel times
+				getPeakWeather()
+				)
+
+		function getPeakWeather () {
+			// get weather for each hour	
+			peakAPILocations.forEach(function(item, index, object) {
+				//just make a string off all the weather types (removing spaces)
+				hourlyWetness = hourlyWetness + apiCallData.hourly.data[item].summary.replace(/\s+/g, '') + ',';
+			})
+
+			//remove last comma
+			hourlyWetness = hourlyWetness.toLowerCase().slice(0, -1);
+			// console.log(hourlyWetness);
+			
+			//rate wetness
+			wetState = rateWetness(hourlyWetness);
+			// console.log('wet State: ' + wetState)
+		}
+
+		
+		//return wet drizzle or dry
+		return(wetState);
+	}
+
+
+
+	// ************* GET WET STATE OF HOURLY SUMMARIES * **************** //
+	// ************* ********************************* **************** //
+	function rateWetness(hourlyWetness) {
+			//if contains rain, return wet
+			//if contains no rain but drizzle return drizzle
+			//if neither rain nor drizzle, return dry
+			if ( occurrences(hourlyWetness, "rain") >= 1 ) {
+				return('wet');
+			} else if ( occurrences(hourlyWetness, "drizzle") >= 1 ) {
+				return('drizzle');
+			} else if ( occurrences(hourlyWetness, "rain") == 0 ) {
+				return('dry');
+			}
+
+
+	}
+
+	// ************* GET WET STATE OF CURRENT WEATHER * **************** //
+	// ************* ********************************* **************** //
+	function currentWeather(apiCallData) {
+		console.log(apiCallData);
+		//use precipIntensity to work out wetness
+		if ( apiCallData.currently.precipIntensity <= 0.13 ) {
+			return('dry');
+		} else if ( apiCallData.currently.precipIntensity <= 0.22 ) {
+			return('drizzle');
+		} else if ( apiCallData.currently.precipIntensity > 0.22 ) {
+			return('wet');
+		}
+	} // ***** END CURRENTWEATHER **** //
+
+
+
+	/** Function that count occurrences of a substring in a string;
+	 * @param {String} string               The string
+	 * @param {String} subString            The sub string to search for
+	 * @param {Boolean} [allowOverlapping]  Optional. (Default:false)
+	 *
+	 * @author Vitim.us https://gist.github.com/victornpb/7736865
+	 * @see Unit Test https://jsfiddle.net/Victornpb/5axuh96u/
+	 * @see http://stackoverflow.com/questions/4009756/how-to-count-string-occurrence-in-string/7924240#7924240
+	 */
+	function occurrences(string, subString, allowOverlapping) {
+
+	    string += "";
+	    subString += "";
+	    if (subString.length <= 0) return (string.length + 1);
+
+	    var n = 0,
+	        pos = 0,
+	        step = allowOverlapping ? 1 : subString.length;
+
+	    while (true) {
+	        pos = string.indexOf(subString, pos);
+	        if (pos >= 0) {
+	            ++n;
+	            pos += step;
+	        } else break;
+	    }
+	    return n;
+	}
+
 
 
 	// ************* CLICK TOMORROW CALLS TOMORROW DATA **************** //
