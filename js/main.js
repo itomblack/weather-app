@@ -1,47 +1,13 @@
 $( document ).ready(function() {
 
-	
-	// var timesOfDay = [{  
-	//     'timeslot': '0',
-	//     'timeHour': '5',
-	//     'peak': false
-	// },{  
-	//     'timeslot': '1',
-	//     'timeHour': '7',
-	//     'peak': true
-	// },{  
-	//     'timeslot': '2',
-	//     'time': '9',
-	//     'peak': true
-	// },{  
-	//     'timeslot': '3',
-	//     'time': '11',
-	//     'peak': false
-	// },{  
-	//     'timeslot': '4',
-	//     'time': '13',
-	//     'peak': false
-	// },{  
-	//     'timeslot': '5',
-	//     'time': '15',
-	//     'peak': false
-	// },{  
-	//     'timeslot': '6',
-	//     'time': '17',
-	//     'peak': true
-	// },{  
-	//     'timeslot': '7',
-	//     'time': '19',
-	//     'peak': true
-	// },{  
-	//     'timeslot': '8',
-	//     'time': '21',
-	//     'peak': false
-	// }];
-
 	//set location
-	var latitude = 51.5074;
-	var longitude = 0.1278;
+	//LONDON
+	// var latitude = 51.5074;
+	// var longitude = 0.1278;
+	//VANCOUVER
+	var latitude = 49.2564744;
+	var longitude = -123.141678;
+
 	var currentDate = new Date();
 	var tomorrowsDate  = new Date();
 	//set tomorrowdate to tomorrows date
@@ -49,6 +15,9 @@ $( document ).ready(function() {
 
 	//Turn tomorrows date into format for api call
 	var tomorrow =  tomorrowsDate.getFullYear() + '-' + ("0" + (tomorrowsDate.getMonth() + 1)).slice(-2) + '-' + ("0" + tomorrowsDate.getDate()).slice(-2) + 'T00:00:00'
+
+	// DELETE THIS ADJUSTMENT FOR TOMORROW DATE
+	// tomorrow = '2017-01-31T00:00:00';
 
 	//set times to collect and peak commute times
 	var peakHours = [7, 8, 9, 17, 18, 19];
@@ -84,13 +53,14 @@ $( document ).ready(function() {
 		// work out whether it's a wet or a dry day (from travel times)
 		var wetLevel = isItWetToday()
 
-
 		if (wetLevel == 'dry') {
-			$('#rating').append(' but at least it\'s ' + wetLevel);
-		} else if (wetLevel == 'dizzle') {
-			$('#rating').append(' with some ' + wetLevel);
+			$('#rating').append(' but at least it\'s ' + wetLevel + '.');
+		} else if (wetLevel == 'drizzle') {
+			$('#rating').append(' with some ' + wetLevel + '.');
 		} else if (wetLevel == 'wet') {
-			$('#rating').append(' and sadly it\'s ' + wetLevel);
+			$('#rating').append(' and sadly it\'s ' + wetLevel + '.');
+		} else if (wetLevel == 'snow') {
+			$('#rating').append('. Watch out for the ' + wetLevel + '!');
 		}
 		
 
@@ -102,14 +72,14 @@ $( document ).ready(function() {
 	// ************* WORK OUT WHICH RANGE THE TEMP IS IN **************** //
 	// ************* *************************************** **************** //
 	function inRange(rangeNum) {
-		if (rangeNum == 0) { $('#rating').text('Cold as ice!'); } 
+		if (rangeNum == 0) { $('#rating').text('Cold as ice'); } 
 		else if (rangeNum == 1) { $('#rating').text('Damn cold');	} 
-		else if (rangeNum == 2) { $('#rating').text('Pretty nippy'); } 
-		else if (rangeNum == 3) { $('#rating').text('Faily mild out'); } 
+		else if (rangeNum == 2) { $('#rating').text('Quite nippy'); } 
+		else if (rangeNum == 3) { $('#rating').text('Fairly mild out'); } 
 		else if (rangeNum == 4) { $('#rating').text('Just about right'); } 
 		else if (rangeNum == 5) { $('#rating').text('Warm enough'); } 
 		else if (rangeNum == 6) { $('#rating').text('Pretty sweaty'); } 
-		else if (rangeNum == 7) { $('#rating').text('Melt your balls off!'); } 
+		else if (rangeNum == 7) { $('#rating').text('Melt your balls off'); } 
 	}
 
 
@@ -230,7 +200,6 @@ $( document ).ready(function() {
 			
 			//rate wetness
 			wetState = rateWetness(hourlyWetness);
-			// console.log('wet State: ' + wetState)
 		}
 
 		
@@ -240,28 +209,30 @@ $( document ).ready(function() {
 
 
 
-	// ************* GET WET STATE OF HOURLY SUMMARIES * **************** //
+	// ************* GET WET STATE OF HOURLY SUMMARIES ***************** //
 	// ************* ********************************* **************** //
 	function rateWetness(hourlyWetness) {
 			//if contains rain, return wet
 			//if contains no rain but drizzle return drizzle
 			//if neither rain nor drizzle, return dry
+			//if it has snow return snowy
 			if ( occurrences(hourlyWetness, "rain") >= 1 ) {
 				return('wet');
 			} else if ( occurrences(hourlyWetness, "drizzle") >= 1 ) {
 				return('drizzle');
-			} else if ( occurrences(hourlyWetness, "rain") == 0 ) {
+			} else if ( occurrences(hourlyWetness, "rain") == 0 && occurrences(hourlyWetness, "snow") == 0 ) {
 				return('dry');
+			} else if ( occurrences(hourlyWetness, "snow") >= 1 ) {
+				return('snow');
 			}
-
-
 	}
 
-	// ************* GET WET STATE OF CURRENT WEATHER * **************** //
+
+	// ************** GET WET STATE OF CURRENT WEATHER ***************** //
 	// ************* ********************************* **************** //
 	function currentWeather(apiCallData) {
 		console.log(apiCallData);
-		//use precipIntensity to work out wetness
+		//use precipIntensity to work out wetness - doesnt work for snow at the mo though
 		if ( apiCallData.currently.precipIntensity <= 0.13 ) {
 			return('dry');
 		} else if ( apiCallData.currently.precipIntensity <= 0.22 ) {
@@ -269,6 +240,7 @@ $( document ).ready(function() {
 		} else if ( apiCallData.currently.precipIntensity > 0.22 ) {
 			return('wet');
 		}
+
 	} // ***** END CURRENTWEATHER **** //
 
 
